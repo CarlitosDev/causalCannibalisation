@@ -5,21 +5,26 @@ Work in progress
 Repository hosting the code for the IEEE paper [Causal Quantification of Cannibalization during Promotional Sales in Grocery Retail](https://ieeexplore.ieee.org/document/9363114)
 
 
-## Installation as a Python wheel package
-To generate the package from the source
-```bash
-python3 setup.py sdist bdist_wheel
-```
+## Datasets
+- Corporacion Favorita [Kaggle](https://www.kaggle.com/c/favorita-grocery-sales-forecasting/data)
 
-In Python, just import as per
-```python
-from A.B import B
-```
+- Breakfast at the Frat [Dunhumby](https://www.dunnhumby.com/source-files/)
 
 
-### Datasets
+## Notebooks
 
-### 
+
+
+
+### Dunnhumby
+From the csv data to the organised data (01.02.2021)
+`Dunnhumby_arrange_store_sales.ipynb`
+
+To summarise the sales per store (prior to the analysis)
+`Dunnhumby_Summarise_store_sales.ipynb`
+
+base NB to calculate the cannibalisation
+`Dunnhumby_CausalImpact_Analysis_base.ipynb`
 
 
 ## Structure of the repo
@@ -35,9 +40,6 @@ The repo is structured as follows:
     │   ├── notebooks/preprocessing_envelope_for_seasonality.ipynb <- STL preprocessing
     │   ├── notebooks/
     │   ├── notebooks/
-
-
-## Manual installation of libraries
 
 
 ### To create the graphs showed in the paper
@@ -58,3 +60,15 @@ To produce the **cannibalisation episode** plot `CFAV_CausalImpact_Analysis_Dair
 To produce the **cannibalisation episode** using the Dunnhumby data, `Dunnhumby_CausalImpact_Analysis_Paper_plot.ipynb`
 
 To produce the **graph** used in the paper `CFAV-causal_impact_GROCERY_I_Pichincha_49_A_11(graph-paper).ipynb`
+
+
+## Installation as a Python wheel package
+To generate the package from the source
+```bash
+python3 setup.py sdist bdist_wheel
+```
+
+In Python, just import as per
+```python
+from A.B import B
+```
