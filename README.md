@@ -11,7 +11,10 @@ Repository hosting the code for the IEEE paper [Causal Quantification of Canniba
 - Breakfast at the Frat [Dunhumby](https://www.dunnhumby.com/source-files/)
 
 
-## Notebooks
+## Libraries
+
+- Papermill from [nteract](https://github.com/nteract/papermill), `pip install pycausalimpact`
+- CausalImpact from [Dafiti](https://github.com/dafiti/causalimpact) `pip install pycausalimpact`
 
 
 
