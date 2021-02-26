@@ -916,4 +916,115 @@ def plot_causal_pairs_exogenous(irow, df_store, fig_h = 10, fig_w = 18, folder_t
         plt.close()
     else:
         plt.show()
+
+
+def plot_causal_pairs_with_price(irow, df_store, df_transactions_at_store, fig_h = 10, fig_w = 18, folder_to_save_plots=None, 
+                                save_to_file=True, use_trend_total_sales=True, save_as_pdf=False):
+
+    sku_id_A = irow['cannibal']
+    sku_id_B = irow['victim']
+    
+    # get the taxonomy
+    sku_A = df_store.filter(regex=f'sales-{sku_id_A}').columns[0]
+    _, dept_id, _, store_name = get_taxonomy_from_sku_name_CFAV(sku_A)
+    category_id = dunnhumby_get_map_dept_to_cat()[dept_id]
+
+    start_period = irow.idx_promo_days[0]
+    end_period = irow.idx_promo_days[1]+1
+
+    sku_B_reg = irow['sku_B_regular_avg_sales']
+    sku_B_cannibalised = irow['sku_B_avg_sales_during_promo_sku_A']
+    sku_B_predicted = irow['avg_predicted']
+    
+    slot_number = irow['slot_number']
+
+    x_axis = df_store.date
+
+    idx_store = 0
+    # Plot one store
+    f, ax = plt.subplots(2,1,figsize=(fig_w*1.5, fig_h))
+
+    idx_axis = 0
+    sales_sku_A = df_store[f'sales-{sku_id_A}-{store_name}']
+    ax[0].plot(x_axis, sales_sku_A, label=f'Sales CN {sku_id_A}-{store_name}',
+            color=def_colours[idx_store], linewidth=3, alpha=0.65)
+
+    sales_sku_B = df_store[f'sales-{sku_id_B}-{store_name}']
+    ax[0].plot(x_axis, sales_sku_B, label=f'Sales VC {sku_id_B}-{store_name} (reg={sku_B_reg:3.2f})',
+            color=def_colours[idx_store+1], linewidth=3, alpha=0.65)
+
+    ax[0].plot(x_axis.iloc[start_period:end_period], sales_sku_A.iloc[start_period:end_period],
+            color=def_colours[idx_store], linewidth=4, alpha=0.95)
+
+    ax[0].plot(x_axis.iloc[start_period:end_period], sales_sku_B.iloc[start_period:end_period],
+            color=def_colours[idx_store+1], linewidth=4, alpha=0.95)
+
+    ax[0].axvspan(x_axis.iloc[start_period], x_axis.iloc[end_period], alpha=0.1, color='red')
+
+    promo_sku_A = df_store[f'promotion_flag-{sku_id_A}-{store_name}']
+    ax[0].plot(x_axis[promo_sku_A], sales_sku_A[promo_sku_A], 'o', label=f'Promo days {sku_id_A} (can={sku_B_cannibalised:3.2f}, pred={sku_B_predicted:3.2f})', 
+                color='r', linewidth=5.5, alpha=0.95)
+
+
+    promo_sku_B = df_store[f'promotion_flag-{sku_id_B}-{store_name}']
+    ax[0].plot(x_axis[promo_sku_B], sales_sku_B[promo_sku_B], 'o', label=f'Promo days {sku_id_B}', 
+                color=def_colours[-4], linewidth=5.5, alpha=0.95)
+    
+    ax[0].legend(prop={'size': 16})
+    ax[0].set_xlabel('dates', fontsize=16)
+    ax[0].set_ylabel('Cannibalisation analysis', fontsize=16)
+    ax[0].grid(True)
+    ax[0].margins(0,0.05)
+    
+    
+    # Add the cannibal price
+    idx_valid = df_transactions_at_store.date.isin(x_axis) & \
+        (df_transactions_at_store.item_id == int(sku_id_A.split('_')[-1]))
+
+    price_cannibal = df_transactions_at_store[idx_valid]
+    ax[1].plot(price_cannibal.date, price_cannibal.PRICE, label=f'Cannibal price',
+            color=def_colours[idx_store], linewidth=3, alpha=0.65)
+    
+
+
+    ax2 = ax[1].twinx()
+
+    idx_valid_B = df_transactions_at_store.date.isin(x_axis) & \
+        (df_transactions_at_store.item_id == int(sku_id_B.split('_')[-1]))
+    
+    price_victim = df_transactions_at_store[idx_valid_B]
+    
+    ax2.plot(price_victim.date, price_victim.PRICE, label=f'Victim price',
+            color=def_colours[idx_store+1], linewidth=3, alpha=0.65)
+
+
+    lines, labels = ax[1].get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    #ax2.legend(lines + lines2, labels + labels2, loc=0, prop={'size': 18})
+    ax2.legend(lines + lines2, labels + labels2, loc=1, prop={'size': 16})
+
+    ax[1].set_xlabel('dates', fontsize=16)
+    ax[1].set_ylabel('Price', fontsize=16)
+    ax[1].grid(True)
+    ax[1].margins(0,0.05)
+    f.tight_layout()
+    if save_to_file:
+        print(category_id, dept_id)
+        foldername_png = os.path.join(folder_to_save_plots, category_id, dept_id, 'causal_plots', store_name)
+        makeFolder(foldername_png)
+        if save_as_pdf:
+            plt_filename = os.path.join(foldername_png, f'{sku_id_A}-{sku_id_B}-{slot_number}.pdf')
+            plt.savefig(plt_filename)
+        else:
+            plt_filename = os.path.join(foldername_png, f'{sku_id_A}-{sku_id_B}-{slot_number}.png')
+            plt.savefig(plt_filename, format='png')
+        plt.close()
+    else:
+        plt.show()
         
+        
+def dunnhumby_get_map_dept_to_cat():
+    return {'PRETZELS': 'BAG.SNACKS', 'ADULT.CEREAL': 'COLD.CEREAL', 'ALL.FAMILY.CEREAL': 'COLD.CEREAL', 
+            'KIDS.CEREAL': 'COLD.CEREAL', 'PIZZA.PREMIUM': 'FROZEN.PIZZA', 
+            'MOUTHWASHES.(ANTISEPTIC)': 'ORAL.HYGIENE.PRODUCTS', 
+            'MOUTHWASH.RINSES.AND.SPRAYS': 'ORAL.HYGIENE.PRODUCTS'}
